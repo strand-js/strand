@@ -101,6 +101,9 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@25.9.3)(jsdom@26.1.0)(terser@5.48.0)
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
 
   packages/react:
     dependencies:
