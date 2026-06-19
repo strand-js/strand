@@ -2,9 +2,7 @@
 
 **AI state management for React.** The layer between your UI and your LLM.
 
-```
-npm install @strand/core @strand/react @strand/anthropic
-```
+TypeScript-first. Provider-agnostic. Works with React 18+ and Node 18+.
 
 ---
 
@@ -19,21 +17,44 @@ const [isLoading, setIsLoading] = useState(false)
 
 async function send(text) {
   setIsLoading(true)
-  setMessages(prev => [...prev, { role: 'user', content: text }])
+  const updated = [...messages, { role: 'user', content: text }]
+  setMessages(updated)
 
-  const res = await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ messages }) })
+  const res = await fetch('/api/chat', { method: 'POST', body: JSON.stringify({ messages: updated }) })
   const reader = res.body.getReader()
 
-  // manually stream tokens
-  // manually detect tool_use blocks
-  // manually append tool_result messages
-  // manually loop until stop_reason === 'end_turn'
+  // manually stream tokens into state
+  // manually detect tool_use blocks in the stream
+  // manually append tool_result messages and loop
   // manually handle errors, rate limits, timeouts
-  // setIsLoading(false) — if you remembered
+  // manually reset isLoading — if you remembered
 }
 ```
 
 Strand eliminates this. It is to LLM interactions what RTK Query is to REST APIs.
+
+---
+
+## Install
+
+**Client (browser):**
+```bash
+npm install @strand/core @strand/react zod
+```
+
+**Server:**
+```bash
+# Anthropic
+npm install @strand/anthropic
+
+# OpenAI
+npm install @strand/openai
+```
+
+**React Native:**
+```bash
+npm install @strand/react-native
+```
 
 ---
 
@@ -59,7 +80,7 @@ Your API key never leaves your server. Your React hooks never touch raw HTTP.
 ### 1. Set up the server endpoint
 
 ```ts
-// server.ts (Express / Fastify / Hono / any Node.js framework)
+// server.ts — Express / Fastify / Hono / any Node.js framework
 import { createStrandHandler } from '@strand/anthropic'
 
 app.post('/api/strand', createStrandHandler({
@@ -103,7 +124,7 @@ function App() {
 import { useConversation } from '@strand/react'
 
 function Chat() {
-  const { messages, send, status, isPending, isStreaming, cancel } = useConversation({
+  const { messages, send, isPending, isStreaming, isDone, cancel } = useConversation({
     system: 'You are a helpful assistant.',
   })
 
@@ -115,7 +136,8 @@ function Chat() {
         </div>
       ))}
 
-      {isStreaming && <div>Thinking...</div>}
+      {isPending && <div>Waiting...</div>}
+      {isStreaming && <div>Typing...</div>}
 
       <input
         disabled={isPending || isStreaming}
@@ -141,21 +163,44 @@ function Chat() {
 Strand tracks four distinct states. Other libraries collapse these into a single `isLoading` boolean — which is why they get stuck.
 
 ```
-idle  →  submitting  →  streaming  →  done
-                                  ↘  error
+idle  →  submitting  →  streaming  →  done  →  idle
+                                  ↘  error →  idle
 ```
 
-| State | Meaning | Hook properties |
+| State | Meaning | Boolean shorthand |
 |---|---|---|
 | `idle` | No active request | `isIdle: true` |
-| `submitting` | Request sent, waiting for first token | `isPending: true` |
+| `submitting` | Request sent, no tokens yet | `isPending: true` |
 | `streaming` | Tokens arriving | `isStreaming: true` |
-| `done` | Response complete | `isIdle: true` |
-| `error` | Something failed | `error: Error` |
+| `done` | Response complete, resetting | `isDone: true` |
+| `error` | Request failed | `error: Error` |
+
+After `done` or `error`, status returns to `idle` on the next tick. `isDone` gives you a window to react to completion before the reset.
+
+### The Message type
+
+```ts
+interface Message {
+  id: string
+  role: 'user' | 'assistant'
+  content: string             // accumulated text (updates during streaming)
+  toolCalls?: ToolCall[]      // present when the model invoked tools
+  createdAt: Date
+}
+
+interface ToolCall {
+  id: string
+  name: string
+  input: Record<string, unknown>    // resolved when streaming completes
+  output: unknown | null            // null until tool execution finishes
+  status: 'pending' | 'running' | 'done' | 'failed'
+  error: Error | null
+}
+```
 
 ### Sessions
 
-A session is more than a messages array. It has identity, token budget tracking, and a lifecycle.
+A session is more than a messages array. It carries identity, token budget, and a lifecycle.
 
 ```ts
 interface Session {
@@ -167,7 +212,7 @@ interface Session {
 }
 ```
 
-Sessions are isolated by default. Pass a `sessionId` to share state across components or persist across mounts.
+Sessions are isolated by default. Pass a `sessionId` to `useConversation` to share state across components or persist it across mounts.
 
 ### Tool call state
 
@@ -178,7 +223,7 @@ pending  →  running  →  done
                      ↘  failed
 ```
 
-Use `useToolCall` to subscribe to a specific tool's state anywhere in your component tree.
+Use `useToolCall` to subscribe to a specific tool's state anywhere in your tree.
 
 ---
 
@@ -190,10 +235,10 @@ Creates the client instance. Pass it to `<StrandProvider>` or directly to any ho
 
 ```ts
 const client = createStrandClient({
-  baseUrl: '/api/strand',       // required — your backend endpoint
+  baseUrl: '/api/strand',        // required — your backend endpoint
   retry: {
-    maxAttempts: 3,             // default: 3
-    backoff: 'exponential',     // 'exponential' | 'linear' | 'none'
+    maxAttempts: 3,              // default: 3
+    backoff: 'exponential',      // 'exponential' | 'linear' | 'none'
     retryOn: ['rate_limit', 'server_error'],
   },
   contextWindow: {
@@ -207,7 +252,7 @@ const client = createStrandClient({
 
 ### `<StrandProvider client={client}>`
 
-Provides the client to all hooks in the tree. If you only have one client, wrap your app once and omit the `client` prop from every hook.
+Provides the client to all hooks in the tree. All hooks read the client from context — omit the `client` prop on individual hooks when using the provider.
 
 ```tsx
 <StrandProvider client={client}>
@@ -223,29 +268,30 @@ The main hook. Manages a full conversation with streaming, tool calls, and histo
 
 ```ts
 const {
-  messages,       // Message[] — full conversation history
+  messages,       // Message[]
   send,           // (content: string, options?: SendOptions) => void
   status,         // 'idle' | 'submitting' | 'streaming' | 'done' | 'error'
-  isPending,      // true when request is in-flight, no tokens yet
-  isStreaming,    // true when tokens are arriving
-  isIdle,         // true when no active request
+  isPending,      // request in-flight, no tokens yet
+  isStreaming,    // tokens arriving
+  isIdle,         // no active request
+  isDone,         // response just completed (resets to idle next tick)
   error,          // Error | null
-  cancel,         // () => void — abort the active request
+  cancel,         // () => void
   clear,          // () => void — reset conversation history
   tokenUsage,     // { input: number, output: number, total: number }
 } = useConversation({
   system,         // string — system prompt
-  tools,          // ToolDefinition[] — tool schemas (Zod)
+  tools,          // ToolDefinition[] — Zod-typed tool schemas
   onToolCall,     // async (name, args) => result — client-side tool execution
-  context,        // Record<string, unknown> — stable per-request context, no stale closures
-  sessionId,      // string — share state across components or persist across mounts
+  context,        // Record<string, unknown> — stable per-request context
+  sessionId,      // string — share or persist state by ID
   onFinish,       // (message: Message) => void
   onError,        // (error: Error) => void
   client,         // StrandClient — omit if using StrandProvider
 })
 ```
 
-**Tool definitions** use Zod schemas for type-safe input:
+**Defining tools** with Zod for type-safe inputs:
 
 ```ts
 import { z } from 'zod'
@@ -263,43 +309,44 @@ const weatherTool = tool({
 const { messages, send } = useConversation({
   tools: [weatherTool],
   onToolCall: async (name, args) => {
-    if (name === 'get_weather') {
-      return fetchWeather(args.location, args.unit)
-    }
+    if (name === 'get_weather') return fetchWeather(args.location, args.unit)
   },
 })
 ```
 
-**Stable context** — attach dynamic values to every request without stale closure bugs:
+**Stable context** — attach dynamic values to every request. Unlike `useChat`, these never go stale:
 
 ```ts
-// These update correctly on every request, even as state changes
 const { send } = useConversation({
   context: {
-    userId: user.id,
+    userId: user.id,      // updates correctly as user changes
     locale: settings.locale,
-    featureFlags: flags,
   },
 })
 ```
+
+**Client tools vs server tools** — tools can be executed on either side:
+- Define in `onToolCall` on the hook: executes in the browser. Good for UI interactions, reading local state, navigation.
+- Define in `onToolCall` on the server handler: executes on your server. Good for database access, external APIs, secrets.
+- If the same tool name is defined on both sides, the **server takes precedence**.
 
 ---
 
 ### `useToolCall(toolName, options?)`
 
-Subscribe to the real-time state of a specific tool call. Renders tool-in-progress UI anywhere in your tree.
+Subscribe to the real-time state of a specific tool call. Scoped to the nearest `StrandProvider` in the tree. If you have multiple providers (e.g., two independent chat panels), each `useToolCall` subscribes to its own provider's session.
 
 ```ts
 const {
   status,     // 'idle' | 'pending' | 'running' | 'done' | 'failed'
-  input,      // T | null — resolved input when available
+  input,      // T | null — resolved when streaming input completes
   output,     // R | null — result when done
   error,      // Error | null
   isRunning,  // boolean
 } = useToolCall<WeatherInput, WeatherResult>('get_weather')
 ```
 
-Example — show a spinner while a specific tool runs:
+Show live tool progress anywhere in your tree:
 
 ```tsx
 function WeatherToolStatus() {
@@ -315,35 +362,64 @@ function WeatherToolStatus() {
 
 ### `useAgentSession(options)`
 
-Multi-step agentic flows with observable step-by-step state.
+Multi-step agentic flows with observable step-by-step state. The agent runs a loop — calling tools and generating responses — until it reaches a final answer or `maxSteps`.
 
 ```ts
 const {
   status,       // 'idle' | 'running' | 'paused' | 'done' | 'failed'
-  steps,        // AgentStep[] — full step history
-  currentStep,  // AgentStep | null — active step
+  steps,        // AgentStep[]
+  currentStep,  // AgentStep | null
   stepCount,    // number
   run,          // (goal: string) => void
   pause,        // () => void
   resume,       // () => void
   cancel,       // () => void
-  result,       // string | null — final output when done
+  result,       // string | null — final answer when done
   error,        // Error | null
 } = useAgentSession({
+  system,       // string — agent persona and instructions
   maxSteps: 10,
   tools: [...],
   onToolCall: async (name, args) => myTools[name](args),
-  onStep: (step) => console.log('Step:', step),
-  onComplete: (result) => console.log('Done:', result),
+  onStep: (step) => { },
+  onComplete: (result) => { },
   client,       // omit if using StrandProvider
 })
+```
+
+```tsx
+function ResearchAgent() {
+  const { status, steps, currentStep, run, cancel, result } = useAgentSession({
+    system: 'You are a research assistant. Use tools to find accurate answers.',
+    maxSteps: 15,
+    tools: [searchTool, summarizeTool],
+    onToolCall: async (name, args) => myTools[name](args),
+  })
+
+  return (
+    <div>
+      <button onClick={() => run('What are the latest developments in quantum computing?')}>
+        Research
+      </button>
+
+      {status === 'running' && (
+        <div>
+          Step {steps.length}: {currentStep?.description}
+          <button onClick={cancel}>Stop</button>
+        </div>
+      )}
+
+      {status === 'done' && <p>{result}</p>}
+    </div>
+  )
+}
 ```
 
 ---
 
 ### `useStreamingText(stream)`
 
-Low-level primitive for building custom streaming UIs.
+Low-level primitive for building custom hooks or rendering a raw stream outside of a full conversation. If you're using `useConversation`, you don't need this — the text is already in `messages`.
 
 ```ts
 const {
@@ -351,79 +427,65 @@ const {
   delta,       // string — most recent token chunk
   isDone,      // boolean
   isStreaming, // boolean
-} = useStreamingText(readableStream)
+} = useStreamingText(readableStream)  // ReadableStream<string>
 ```
 
 ---
 
 ## Server-side setup
 
-### Tool execution on the server
+### `createStrandHandler(config)` options
 
-For tools that need database access, secrets, or server-only APIs — define them in the handler, not the hook:
+Full configuration for the Express/Fastify/Hono handler:
 
 ```ts
-import { createStrandHandler } from '@strand/anthropic'
-import { z } from 'zod'
-import { tool } from '@strand/core'
-
-const searchDatabaseTool = tool({
-  name: 'search_database',
-  description: 'Search internal records',
-  parameters: z.object({ query: z.string() }),
-})
-
 app.post('/api/strand', createStrandHandler({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-  model: 'claude-sonnet-4-6',
-  tools: [searchDatabaseTool],
-  onToolCall: async (name, args, { session, request }) => {
-    if (name === 'search_database') {
-      return db.search(args.query)
-    }
-  },
+  apiKey: string,
+  model: string,
+  system?: string | ((request: Request) => string | Promise<string>),
+  tools?: ToolDefinition[],
+  onToolCall?: async (name, args, ctx: { request: Request }) => unknown,
+  maxSteps?: number,           // default: 10
+  onRequest?: (req: Request) => void,
+  onFinish?: (session: Session) => void,
 }))
 ```
 
-### `createStrandHandler(config)` options
+Dynamic system prompts — read auth headers, tenant config, user preferences:
 
 ```ts
-{
-  apiKey: string
-  model: string
-  tools?: ToolDefinition[]
-  onToolCall?: async (name, args, ctx) => result
-  system?: string | ((request: Request) => string)
-  maxSteps?: number           // default: 10 — max tool call rounds per request
-  onRequest?: (req) => void   // inspect/log incoming requests
-  onFinish?: (session) => void
-}
+createStrandHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-sonnet-4-6',
+  system: async (request) => {
+    const user = await getUserFromRequest(request)
+    return `You are a helpful assistant for ${user.companyName}.`
+  },
+})
 ```
 
 ---
 
 ## React Native
 
-Strand works in React Native out of the box with the `@strand/react-native` transport adapter. React Native's `fetch` doesn't support streaming — this package patches it transparently.
+React Native's `fetch` doesn't support streaming. `@strand/react-native` patches the transport layer transparently — no API changes, no config required.
 
-```ts
+```bash
 npm install @strand/react-native
 ```
 
 ```ts
-// App.tsx — import before anything else
+// App.tsx — must be the first import
 import '@strand/react-native'
-
-// That's it. All hooks work as normal.
 ```
 
-Works with Expo and bare React Native.
+All hooks work identically after this. Works with Expo SDK 50+ and bare React Native 0.73+.
 
 ---
 
 ## OpenAI
 
-```ts
+```bash
 npm install @strand/openai
 ```
 
@@ -436,26 +498,33 @@ app.post('/api/strand', createStrandHandler({
 }))
 ```
 
-The client and all React hooks are identical regardless of provider.
+The client and all React hooks are provider-agnostic — zero changes on the frontend when switching providers.
 
 ---
 
 ## Why Strand?
 
-| | Strand | Vercel AI SDK | LangChain.js |
+| | Strand | Vercel AI SDK | Raw SDK |
 |---|---|---|---|
-| React Native | ✅ Day one | ❌ Broken by default | ❌ |
+| React Native | ✅ Day one | ❌ Broken by default | ❌ DIY |
 | Per-tool state (`useToolCall`) | ✅ | ❌ | ❌ |
-| Streaming lifecycle (4 states) | ✅ | ⚠️ `isLoading` bugs | ✅ |
-| Context window management | ✅ Built in | ❌ Explicitly excluded | ✅ |
-| Stable context injection | ✅ No stale closures | ❌ Known footgun | ✅ |
-| Retry / backoff | ✅ Built in | ❌ Third party only | ✅ |
+| Streaming lifecycle (4 states) | ✅ | ⚠️ Known `isLoading` bugs | ❌ |
+| Context window management | ✅ Built in | ❌ Explicitly excluded | ❌ |
+| Stable context injection | ✅ | ❌ Stale closure footgun | ❌ |
+| Retry / backoff | ✅ Built in | ❌ Third party only | ❌ |
 | Framework agnostic | ✅ | ⚠️ NextJS-centric | ✅ |
-| Bundle size | Small | Medium | Large |
-| Stable versioning | ✅ Committed | ❌ Major churn | ⚠️ |
-| Parallel tool calls | ✅ | ⚠️ Open bug | ⚠️ |
+| Parallel tool call state | ✅ | ⚠️ Open bug | ❌ |
+| Stable versioning contract | ✅ | ❌ 4 majors in 2 years | — |
 
-Strand is not a Vercel AI SDK replacement for every use case. If you're deep in the Next.js App Router ecosystem and don't need tool call state, stick with what you have. Strand is for teams who've outgrown the primitives.
+Strand is not a Vercel AI SDK replacement for every use case. If you're deep in the Next.js App Router ecosystem and the SDK's primitives are enough, stick with what you have. Strand is for teams who've outgrown them — or who are starting fresh and don't want to rebuild the same boilerplate again.
+
+---
+
+## Requirements
+
+- React 18+
+- Node.js 18+ (server)
+- TypeScript 5+ (recommended — types are the primary interface)
 
 ---
 
@@ -464,10 +533,10 @@ Strand is not a Vercel AI SDK replacement for every use case. If you're deep in 
 ### v1 (current)
 - `@strand/core`, `@strand/react`, `@strand/anthropic`, `@strand/openai`, `@strand/react-native`
 - `useConversation`, `useToolCall`, `useAgentSession`, `useStreamingText`
-- Context window management, retry, parallel tool calls
+- Retry/backoff, context window management, parallel tool call state
 
 ### v2
-- Conversation branching (fork from any message)
+- Conversation branching (fork from any message, navigate history as a tree)
 - Durable sessions (survive disconnects, reconnect from checkpoint)
 - Parallel sub-agent orchestration
 
@@ -475,7 +544,7 @@ Strand is not a Vercel AI SDK replacement for every use case. If you're deep in 
 
 ## Contributing
 
-Strand is early. If you hit a bug or have a use case the API doesn't serve, [open an issue](https://github.com/strand-js/strand/issues). Real-world feedback shapes v1 more than anything else.
+Strand is early. If you hit a use case the API doesn't serve, [open an issue](https://github.com/strand-js/strand/issues). Real-world feedback shapes v1 more than anything else.
 
 ---
 
