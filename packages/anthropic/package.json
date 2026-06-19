@@ -25,9 +25,11 @@
     "@strand/core": "workspace:*"
   },
   "devDependencies": {
+    "@types/express": "^5.0.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "zod": "^3.23.8"
   },
   "publishConfig": {
     "access": "public"

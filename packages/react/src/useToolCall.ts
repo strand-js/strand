@@ -1,7 +1,7 @@
-import type { StrandClient, ToolCallStatus } from '@strand/core'
+import type { StrandClient } from '@strand/core'
 
 export interface ToolCallResult<TInput = unknown, TOutput = unknown> {
-  status: ToolCallStatus
+  status: 'idle' | 'pending' | 'running' | 'done' | 'failed'
   input: TInput | null
   output: TOutput | null
   error: Error | null
