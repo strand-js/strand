@@ -32,7 +32,7 @@ export function messagesToAnthropicMessages(
       const blocks: Anthropic.ContentBlock[] = []
 
       if (hasContent) {
-        blocks.push({ type: 'text', text: msg.content })
+        blocks.push({ type: 'text', text: msg.content, citations: null })
       }
 
       for (const tc of msg.toolCalls ?? []) {

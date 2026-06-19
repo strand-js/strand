@@ -1,4 +1,7 @@
+import Anthropic from '@anthropic-ai/sdk'
 import type { ToolDefinition, Session } from '@strand/core'
+import { generateId } from '@strand/core'
+import { toolToAnthropicTool } from './format'
 
 export interface StrandHandlerConfig {
   apiKey: string
@@ -15,10 +18,176 @@ export interface StrandHandlerConfig {
   onFinish?: (session: Session) => void
 }
 
-// Returns an Express/Fastify/Hono-compatible request handler
+type AnyReq = Record<string, unknown>
+type AnyRes = {
+  setHeader(name: string, value: string): void
+  write(chunk: string): void
+  end(): void
+}
+
+interface ToolAccumulator {
+  id: string
+  name: string
+  inputJson: string
+}
+
+function emit(res: AnyRes, eventType: string, data: object): void {
+  res.write(`event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`)
+}
+
 export function createStrandHandler(
-  _config: StrandHandlerConfig,
-): (req: unknown, res: unknown) => Promise<void> {
-  // Implementation in Task #6
-  throw new Error('[strand] createStrandHandler: not yet implemented')
+  config: StrandHandlerConfig,
+): (req: AnyReq, res: AnyRes) => Promise<void> {
+  const client = new Anthropic({ apiKey: config.apiKey })
+  const anthropicTools = (config.tools ?? []).map(toolToAnthropicTool)
+  const maxSteps = config.maxSteps ?? 10
+
+  return async (req: AnyReq, res: AnyRes) => {
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+
+    emit(res, 'strand:start', { sessionId: generateId(), requestId: generateId() })
+
+    try {
+      const body = req.body as {
+        messages: Array<{ role: string; content: string }>
+        context?: Record<string, unknown>
+      }
+
+      const system =
+        typeof config.system === 'function'
+          ? await config.system(req as unknown as Request)
+          : (config.system ?? '')
+
+      const conversation: Anthropic.MessageParam[] = body.messages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content,
+      }))
+
+      let totalInput = 0
+      let totalOutput = 0
+
+      for (let step = 0; step < maxSteps; step++) {
+        const stream = await client.messages.create({
+          model: config.model,
+          max_tokens: 8192,
+          ...(system ? { system } : {}),
+          messages: conversation,
+          ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
+          stream: true,
+        })
+
+        let stopReason: string | null = null
+        let currentTool: ToolAccumulator | null = null
+        const completedTools: Array<{ id: string; name: string; input: Record<string, unknown> }> = []
+        const assistantContent: Anthropic.ContentBlock[] = []
+
+        for await (const event of stream) {
+          if (event.type === 'message_start' && event.message.usage) {
+            totalInput += event.message.usage.input_tokens
+          }
+
+          if (event.type === 'content_block_start') {
+            const block = event.content_block
+            if (block.type === 'text') {
+              assistantContent.push({ type: 'text', text: '', citations: null })
+            }
+            if (block.type === 'tool_use') {
+              currentTool = { id: block.id, name: block.name, inputJson: '' }
+              emit(res, 'strand:tool-start', { toolCallId: block.id, toolName: block.name })
+            }
+          }
+
+          if (event.type === 'content_block_delta') {
+            const delta = event.delta
+            if (delta.type === 'text_delta') {
+              const last = assistantContent.at(-1)
+              if (last?.type === 'text') last.text += delta.text
+              emit(res, 'strand:text-delta', { delta: delta.text })
+            }
+            if (delta.type === 'input_json_delta' && currentTool) {
+              currentTool.inputJson += delta.partial_json
+              emit(res, 'strand:tool-input-delta', {
+                toolCallId: currentTool.id,
+                delta: delta.partial_json,
+              })
+            }
+          }
+
+          if (event.type === 'content_block_stop' && currentTool) {
+            const input = JSON.parse(currentTool.inputJson || '{}') as Record<string, unknown>
+            completedTools.push({ id: currentTool.id, name: currentTool.name, input })
+            assistantContent.push({
+              type: 'tool_use',
+              id: currentTool.id,
+              name: currentTool.name,
+              input,
+            })
+            currentTool = null
+          }
+
+          if (event.type === 'message_delta') {
+            stopReason = event.delta.stop_reason ?? null
+            if (event.usage) totalOutput += event.usage.output_tokens
+          }
+        }
+
+        if (stopReason === 'end_turn' || stopReason === 'max_tokens') {
+          emit(res, 'strand:done', {
+            usage: { input: totalInput, output: totalOutput, total: totalInput + totalOutput },
+          })
+          res.end()
+          return
+        }
+
+        if (stopReason === 'tool_use' && completedTools.length > 0) {
+          conversation.push({ role: 'assistant', content: assistantContent })
+
+          const toolResults = await Promise.all(
+            completedTools.map(async block => {
+              emit(res, 'strand:tool-input-done', { toolCallId: block.id, input: block.input })
+              try {
+                const result = await config.onToolCall?.(
+                  block.name,
+                  block.input,
+                  { request: req as unknown as Request },
+                )
+                emit(res, 'strand:tool-result', { toolCallId: block.id, result })
+                return {
+                  type: 'tool_result' as const,
+                  tool_use_id: block.id,
+                  content: JSON.stringify(result ?? null),
+                }
+              } catch (err) {
+                const message = err instanceof Error ? err.message : 'Tool execution failed'
+                emit(res, 'strand:tool-error', { toolCallId: block.id, error: message })
+                return {
+                  type: 'tool_result' as const,
+                  tool_use_id: block.id,
+                  content: message,
+                  is_error: true,
+                }
+              }
+            }),
+          )
+
+          conversation.push({ role: 'user', content: toolResults })
+          continue
+        }
+
+        // Unknown stop reason — finish
+        break
+      }
+
+      emit(res, 'strand:done', {
+        usage: { input: totalInput, output: totalOutput, total: totalInput + totalOutput },
+      })
+      res.end()
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Internal server error'
+      emit(res, 'strand:error', { code: 'server_error', message })
+      res.end()
+    }
+  }
 }
