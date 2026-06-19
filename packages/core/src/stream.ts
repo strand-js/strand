@@ -1,4 +1,3 @@
-import { createParser } from 'eventsource-parser'
 import type { WireEvent } from './types'
 
 const KNOWN_EVENT_TYPES = new Set([
@@ -13,30 +12,34 @@ const KNOWN_EVENT_TYPES = new Set([
   'strand:error',
 ])
 
+// Parses SSE messages from a buffer string.
+// Returns an array of { event, data } pairs and the leftover unparsed buffer.
+function parseSSEBuffer(buffer: string): { events: Array<{ event: string; data: string }>; rest: string } {
+  const messages = buffer.split('\n\n')
+  const rest = messages.pop() ?? ''
+  const events: Array<{ event: string; data: string }> = []
+
+  for (const message of messages) {
+    if (!message.trim()) continue
+    let event = ''
+    let data = ''
+    for (const line of message.split('\n')) {
+      if (line.startsWith('event: ')) event = line.slice(7).trim()
+      else if (line.startsWith('data: ')) data = line.slice(6)
+    }
+    if (event && data) events.push({ event, data })
+  }
+
+  return { events, rest }
+}
+
 export async function* parseSSEStream(
   body: ReadableStream<Uint8Array>,
   signal?: AbortSignal,
 ): AsyncGenerator<WireEvent> {
   const decoder = new TextDecoder()
   const reader = body.getReader()
-
-  // Buffer parsed events to yield them from the generator
-  const pending: WireEvent[] = []
-  let resolve: (() => void) | null = null
-
-  const parser = createParser({
-    onEvent(event) {
-      if (!KNOWN_EVENT_TYPES.has(event.event ?? '')) return
-
-      try {
-        const data = JSON.parse(event.data)
-        pending.push({ type: event.event, ...data } as WireEvent)
-        resolve?.()
-      } catch {
-        // malformed JSON — skip silently
-      }
-    },
-  })
+  let buffer = ''
 
   try {
     while (true) {
@@ -45,17 +48,32 @@ export async function* parseSSEStream(
       const { done, value } = await reader.read()
       if (done) break
 
-      parser.feed(decoder.decode(value, { stream: true }))
+      buffer += decoder.decode(value, { stream: true })
+      const { events, rest } = parseSSEBuffer(buffer)
+      buffer = rest
 
-      while (pending.length > 0) {
-        yield pending.shift()!
+      for (const { event, data } of events) {
+        if (!KNOWN_EVENT_TYPES.has(event)) continue
+        try {
+          const parsed = JSON.parse(data)
+          yield { type: event, ...parsed } as WireEvent
+        } catch {
+          // malformed JSON — skip silently
+        }
       }
     }
 
-    // Flush any remaining decoded bytes
-    parser.feed(decoder.decode())
-    while (pending.length > 0) {
-      yield pending.shift()!
+    // Flush remaining decoder bytes and check for any final complete message
+    buffer += decoder.decode()
+    const { events } = parseSSEBuffer(buffer + '\n\n')
+    for (const { event, data } of events) {
+      if (!KNOWN_EVENT_TYPES.has(event)) continue
+      try {
+        const parsed = JSON.parse(data)
+        yield { type: event, ...parsed } as WireEvent
+      } catch {
+        // skip
+      }
     }
   } finally {
     reader.releaseLock()
