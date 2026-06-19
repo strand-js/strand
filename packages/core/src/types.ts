@@ -64,8 +64,14 @@ export interface StrandClientConfig {
   contextWindow?: ContextWindowConfig
 }
 
+export interface SendOptions {
+  context?: Record<string, unknown>
+  signal?: AbortSignal
+}
+
 export interface StrandClient {
   readonly config: StrandClientConfig
+  send(messages: Message[], options?: SendOptions): AsyncGenerator<WireEvent>
 }
 
 export interface AgentStep {
