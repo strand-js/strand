@@ -1,6 +1,7 @@
 export type {
   StrandClient,
   StrandClientConfig,
+  SendOptions,
   Session,
   Message,
   ToolCall,
