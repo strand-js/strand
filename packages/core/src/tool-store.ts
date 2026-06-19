@@ -1,4 +1,4 @@
-import type { ToolCallState, ToolCallStatus } from './types'
+import type { ToolCallState } from './types'
 
 function idleState(): ToolCallState {
   return { id: null, toolName: null, status: 'idle', input: null, output: null, error: null }
