@@ -49,9 +49,6 @@ function makeMockResponse() {
   }
 }
 
-function makeReq(body: object) {
-  return { body, headers: {} } as unknown as Parameters<typeof createStrandHandler>[0] extends (...args: infer A) => unknown ? A[0] : never
-}
 
 // ─────────────────────────────────────────────────────────────────────────
 
