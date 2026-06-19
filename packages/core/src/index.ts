@@ -5,6 +5,7 @@ export type {
   Session,
   Message,
   ToolCall,
+  ToolCallState,
   ToolDefinition,
   AgentStep,
   StreamingStatus,
@@ -23,3 +24,5 @@ export { SessionStateMachine, generateId } from './session'
 export { applyContextWindow } from './context-window'
 export { withRetry, StrandError } from './retry'
 export { parseSSEStream } from './stream'
+export { ToolCallStore } from './tool-store'
+export { processWireEvent } from './wire-processor'
