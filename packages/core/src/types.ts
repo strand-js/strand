@@ -74,6 +74,15 @@ export interface StrandClient {
   send(messages: Message[], options?: SendOptions): AsyncGenerator<WireEvent>
 }
 
+export interface ToolCallState<TInput = unknown, TOutput = unknown> {
+  id: string | null          // active toolCallId, null when idle
+  toolName: string | null
+  status: ToolCallStatus
+  input: TInput | null
+  output: TOutput | null
+  error: Error | null
+}
+
 export interface AgentStep {
   index: number
   description: string
