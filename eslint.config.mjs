@@ -16,6 +16,9 @@ export default [
     plugins: { '@typescript-eslint': tsPlugin },
     rules: {
       ...tsPlugin.configs.recommended.rules,
+      // TypeScript handles undefined-variable checks more accurately than ESLint
+      // can across Web API / Node / browser globals — disable in favour of tsc.
+      'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
