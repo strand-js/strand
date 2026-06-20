@@ -24,6 +24,14 @@ export default [
     },
   },
   {
+    // Test files: relax rules that fire on valid test patterns
+    // (generators that throw/return without yielding, intentional unused refs)
+    files: ['packages/*/src/__tests__/**/*.ts', 'packages/*/src/__tests__/**/*.tsx'],
+    rules: {
+      'require-yield': 'off',
+    },
+  },
+  {
     ignores: ['**/dist/**', '**/node_modules/**', '**/*.config.*'],
   },
 ]
