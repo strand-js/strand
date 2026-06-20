@@ -1,0 +1,30 @@
+{
+  "name": "agent-session",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"pnpm server\" \"vite\"",
+    "server": "tsx server.ts",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@strand/anthropic": "workspace:*",
+    "@strand/core": "workspace:*",
+    "@strand/react": "workspace:*",
+    "express": "^4.21.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7"
+  }
+}
