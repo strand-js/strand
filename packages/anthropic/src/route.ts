@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { generateId } from '@strand/core'
+import { generateId, validateMessages } from '@strand/core'
 import type { StrandHandlerConfig } from './handler'
 import { toolToAnthropicTool } from './format'
 
@@ -21,9 +21,35 @@ export function createStrandRoute(
   const maxSteps = config.maxSteps ?? 10
 
   return async (req: Request): Promise<Response> => {
-    const body = await req.json() as {
-      messages: Array<{ role: string; content: string }>
+    const body = await req.json() as { messages?: unknown; context?: Record<string, unknown> }
+
+    // ── 1. Validate input ────────────────────────────────────────────────
+    const validation = validateMessages(body?.messages, {
+      maxMessages: config.maxMessages,
+      maxMessageLength: config.maxMessageLength,
+    })
+    if (!validation.ok) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: validation.status,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
+
+    // ── 2. Authorize ─────────────────────────────────────────────────────
+    if (config.authorize) {
+      try {
+        await config.authorize(req)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unauthorized'
+        return new Response(JSON.stringify({ error: message }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // ── 3. Stream ────────────────────────────────────────────────────────
+    const messages = body.messages as Array<{ role: string; content: string }>
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -38,7 +64,7 @@ export function createStrandRoute(
               ? await config.system(req)
               : (config.system ?? '')
 
-          const conversation: Anthropic.MessageParam[] = body.messages.map(m => ({
+          const conversation: Anthropic.MessageParam[] = messages.map(m => ({
             role: m.role as 'user' | 'assistant',
             content: m.content,
           }))
@@ -103,7 +129,7 @@ export function createStrandRoute(
             if (stopReason === 'tool_use' && completedTools.length > 0) {
               conversation.push({ role: 'assistant', content: assistantContent })
               const results = await Promise.all(
-                completedTools.map(async block => {
+                completedTools.map(async (block: { id: string; name: string; input: Record<string, unknown> }) => {
                   emit('strand:tool-input-done', { toolCallId: block.id, input: block.input })
                   try {
                     const result = await config.onToolCall?.(block.name, block.input, { request: req })

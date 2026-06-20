@@ -76,6 +76,41 @@ export const POST = createStrandRoute({
 })
 ```
 
+## Authorization
+
+The `/api/strand` endpoint should be protected before going to production. Use the `authorize` callback — it runs before any LLM calls and before SSE headers are set:
+
+```ts
+createStrandHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-sonnet-4-6',
+  authorize: async (request) => {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '')
+    const user = await verifyToken(token)
+    if (!user) throw new Error('Unauthorized') // returns 401 to caller
+    return user // available in ctx if needed
+  },
+})
+```
+
+If `authorize` throws, the handler returns `401` with a JSON error body — no SSE stream is opened and no API credits are used.
+
+## Input validation
+
+Messages are validated automatically before any LLM call:
+- Only `'user'` and `'assistant'` roles are accepted — `'system'` role injection from the client is blocked
+- Message count and content length limits are enforced
+
+Configure limits:
+```ts
+createStrandHandler({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+  model: 'claude-sonnet-4-6',
+  maxMessages: 50,          // default: 100
+  maxMessageLength: 10_000, // default: 50_000 chars per message
+})
+```
+
 ## Config options
 
 | Option | Type | Description |
@@ -85,6 +120,9 @@ export const POST = createStrandRoute({
 | `system` | `string \| (req) => string` | System prompt (static or dynamic) |
 | `tools` | `ToolDefinition[]` | Tools available to the model |
 | `onToolCall` | `async (name, args, ctx) => result` | Tool execution handler |
+| `authorize` | `async (req) => void` | Throw to reject with 401. Runs before any LLM call. |
+| `maxMessages` | `number` | Max messages per request (default: 100) |
+| `maxMessageLength` | `number` | Max chars per message (default: 50,000) |
 | `maxSteps` | `number` | Max tool call rounds per request (default: 10) |
 | `onRequest` | `(req) => void` | Inspect incoming requests |
 | `onFinish` | `(session) => void` | Called after response completes |

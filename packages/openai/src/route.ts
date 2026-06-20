@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { generateId } from '@strand/core'
+import { generateId, validateMessages } from '@strand/core'
 import type { StrandHandlerConfig } from './handler'
 import { toolToOpenAITool } from './format'
 
@@ -15,7 +15,35 @@ export function createStrandRoute(
   const maxSteps = config.maxSteps ?? 10
 
   return async (req: Request): Promise<Response> => {
-    const body = await req.json() as { messages: Array<{ role: string; content: string }> }
+    const body = await req.json() as { messages?: unknown }
+
+    // ── 1. Validate input ────────────────────────────────────────────────
+    const validation = validateMessages(body?.messages, {
+      maxMessages: config.maxMessages,
+      maxMessageLength: config.maxMessageLength,
+    })
+    if (!validation.ok) {
+      return new Response(JSON.stringify({ error: validation.error }), {
+        status: validation.status,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    }
+
+    // ── 2. Authorize ─────────────────────────────────────────────────────
+    if (config.authorize) {
+      try {
+        await config.authorize(req)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Unauthorized'
+        return new Response(JSON.stringify({ error: message }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    // ── 3. Stream ────────────────────────────────────────────────────────
+    const messages = body.messages as Array<{ role: string; content: string }>
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -32,7 +60,7 @@ export function createStrandRoute(
 
           const conversation: OpenAI.ChatCompletionMessageParam[] = [
             ...(system ? [{ role: 'system' as const, content: system }] : []),
-            ...body.messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+            ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           ]
 
           let totalInput = 0
