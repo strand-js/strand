@@ -31,6 +31,8 @@ function makeMockResponse() {
   return {
     res: {
       setHeader: vi.fn(),
+      status: vi.fn().mockReturnThis(),
+      json: vi.fn(),
       write: (chunk: string) => written.push(chunk),
       end: vi.fn(),
     },
@@ -55,6 +57,66 @@ function makeMockResponse() {
 describe('createStrandHandler', () => {
   beforeEach(() => {
     mockCreate.mockReset()
+  })
+
+  describe('authorize()', () => {
+    it('returns 401 when authorize throws', async () => {
+      const handler = createStrandHandler({
+        apiKey: 'sk-test',
+        model: 'claude-sonnet-4-6',
+        authorize: async () => { throw new Error('Unauthorized') },
+      })
+      const { res, events } = makeMockResponse()
+      await handler({ body: { messages: [{ role: 'user', content: 'Hi' }] } } as never, res as never)
+      expect(res.status).toHaveBeenCalledWith(401)
+      expect(events()).toHaveLength(0) // no SSE events — plain JSON error
+    })
+
+    it('proceeds when authorize resolves', async () => {
+      mockCreate.mockReturnValue(
+        makeAnthropicStream(
+          [{ type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 1 } }],
+          { stop_reason: 'end_turn', content: [], usage: { input_tokens: 5, output_tokens: 1 } },
+        ),
+      )
+      const authorize = vi.fn().mockResolvedValue({ userId: 'u1' })
+      const handler = createStrandHandler({
+        apiKey: 'sk-test',
+        model: 'claude-sonnet-4-6',
+        authorize,
+      })
+      const { res } = makeMockResponse()
+      await handler({ body: { messages: [{ role: 'user', content: 'Hi' }] } } as never, res as never)
+      expect(authorize).toHaveBeenCalledOnce()
+    })
+  })
+
+  describe('input validation', () => {
+    it('returns 400 for invalid message role', async () => {
+      const handler = createStrandHandler({ apiKey: 'sk-test', model: 'claude-sonnet-4-6' })
+      const { res } = makeMockResponse()
+      await handler({ body: { messages: [{ role: 'system', content: 'injected' }] } } as never, res as never)
+      expect(res.status).toHaveBeenCalledWith(400)
+    })
+
+    it('returns 400 when messages is not an array', async () => {
+      const handler = createStrandHandler({ apiKey: 'sk-test', model: 'claude-sonnet-4-6' })
+      const { res } = makeMockResponse()
+      await handler({ body: { messages: 'not an array' } } as never, res as never)
+      expect(res.status).toHaveBeenCalledWith(400)
+    })
+
+    it('returns 400 when message count exceeds maxMessages', async () => {
+      const handler = createStrandHandler({
+        apiKey: 'sk-test',
+        model: 'claude-sonnet-4-6',
+        maxMessages: 2,
+      })
+      const { res } = makeMockResponse()
+      const messages = [1, 2, 3].map(i => ({ role: 'user', content: `msg ${i}` }))
+      await handler({ body: { messages } } as never, res as never)
+      expect(res.status).toHaveBeenCalledWith(400)
+    })
   })
 
   it('emits strand:start and strand:done for a plain text response', async () => {
