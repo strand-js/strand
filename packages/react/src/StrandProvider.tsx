@@ -1,8 +1,10 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useState, useMemo, type ReactNode } from 'react'
 import type { StrandClient } from '@strand/core'
+import { ToolCallStore } from '@strand/core'
 
 interface StrandContextValue {
   client: StrandClient
+  toolStore: ToolCallStore
 }
 
 const StrandContext = createContext<StrandContextValue | null>(null)
@@ -13,16 +15,26 @@ interface StrandProviderProps {
 }
 
 export function StrandProvider({ client, children }: StrandProviderProps) {
-  return <StrandContext.Provider value={{ client }}>{children}</StrandContext.Provider>
+  const [toolStore] = useState(() => new ToolCallStore())
+  const value = useMemo(() => ({ client, toolStore }), [client, toolStore])
+  return <StrandContext.Provider value={value}>{children}</StrandContext.Provider>
 }
 
-export function useStrandClient(explicitClient?: StrandClient): StrandClient {
+// Returns the nearest provider context, or falls back to explicit client.
+// When no provider exists, tool store is ephemeral — useToolCall won't share state.
+export function useStrandContext(explicitClient?: StrandClient): StrandContextValue {
   const ctx = useContext(StrandContext)
-  if (explicitClient) return explicitClient
-  if (!ctx) {
-    throw new Error(
-      '[strand] No StrandClient found. Wrap your app in <StrandProvider client={client}> or pass client directly to the hook.',
-    )
+
+  if (ctx) {
+    return explicitClient ? { client: explicitClient, toolStore: ctx.toolStore } : ctx
   }
-  return ctx.client
+
+  if (explicitClient) {
+    // No provider — stable tool store per hook instance is handled by caller
+    return { client: explicitClient, toolStore: new ToolCallStore() }
+  }
+
+  throw new Error(
+    '[strand] No StrandClient found. Wrap your app in <StrandProvider client={client}> or pass a client prop to the hook.',
+  )
 }
