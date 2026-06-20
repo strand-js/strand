@@ -1,10 +1,10 @@
-import { describe, it, expect, act } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { renderHook } from '@testing-library/react'
 import type { StrandClient, StrandClientConfig, WireEvent } from '@strand/core'
 import { ToolCallStore } from '@strand/core'
 import { useToolCall } from '../useToolCall'
 import { StrandProvider } from '../StrandProvider'
-import { createElement, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 function makeClient(): StrandClient {
   return {
@@ -14,8 +14,9 @@ function makeClient(): StrandClient {
 }
 
 function wrapper(client: StrandClient) {
-  return ({ children }: { children: ReactNode }) =>
-    createElement(StrandProvider, { client }, children)
+  return ({ children }: { children: ReactNode }) => (
+    <StrandProvider client={client}>{children}</StrandProvider>
+  )
 }
 
 describe('useToolCall', () => {
@@ -40,9 +41,7 @@ describe('useToolCall', () => {
     const client = makeClient()
 
     function CapturingProvider({ children }: { children: ReactNode }) {
-      // Render StrandProvider normally — toolStore lives in its state.
-      // We'll poke the store directly via the exported hook.
-      return createElement(StrandProvider, { client }, children)
+      return <StrandProvider client={client}>{children}</StrandProvider>
     }
 
     const { result: toolCallResult } = renderHook(() => useToolCall('get_weather'), {

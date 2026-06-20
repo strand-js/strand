@@ -3,7 +3,7 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import type { WireEvent, StrandClient, StrandClientConfig } from '@strand/core'
 import { useConversation } from '../useConversation'
 import { StrandProvider } from '../StrandProvider'
-import { createElement, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 // ── Mock client factory ────────────────────────────────────────────────────
 
@@ -21,8 +21,9 @@ function makeClient(events: WireEvent[]): StrandClient {
 }
 
 function wrapper(client: StrandClient) {
-  return ({ children }: { children: ReactNode }) =>
-    createElement(StrandProvider, { client }, children)
+  return ({ children }: { children: ReactNode }) => (
+    <StrandProvider client={client}>{children}</StrandProvider>
+  )
 }
 
 // ─────────────────────────────────────────────────────────────────────────
