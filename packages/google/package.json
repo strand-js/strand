@@ -1,6 +1,6 @@
 {
   "name": "@strand-js/google",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Google Gemini provider adapter for Strand",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

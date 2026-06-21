@@ -14,5 +14,7 @@ export function toolToJsonSchema(tool: ToolDefinition): JsonSchema {
   const inner = (schema as Record<string, unknown>)
   // Remove $schema field added by zodToJsonSchema
   delete inner['$schema']
+  // Anthropic requires type: "object" to be explicitly present
+  if (!inner['type']) inner['type'] = 'object'
   return inner as JsonSchema
 }
