@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { ToolDefinition, Session } from '@strand-js/core'
-import { generateId, validateMessages } from '@strand-js/core'
+import { generateId, validateMessages, RateLimiter } from '@strand-js/core'
+import type { RateLimitConfig } from '@strand-js/core'
 import { toolToAnthropicTool } from './format'
 
 export interface StrandHandlerConfig {
@@ -15,8 +16,9 @@ export interface StrandHandlerConfig {
   ) => Promise<unknown>
   // Security
   authorize?: (request: Request) => Promise<unknown> | unknown
-  maxMessages?: number        // default: 100 — reject requests with more messages
-  maxMessageLength?: number   // default: 50_000 — reject messages with more chars
+  rateLimit?: RateLimitConfig  // built-in rate limiting by IP
+  maxMessages?: number         // default: 100 — reject requests with more messages
+  maxMessageLength?: number    // default: 50_000 — reject messages with more chars
   // Lifecycle
   maxSteps?: number
   onRequest?: (req: Request) => void
@@ -48,9 +50,23 @@ export function createStrandHandler(
   const client = new Anthropic({ apiKey: config.apiKey })
   const anthropicTools = (config.tools ?? []).map(toolToAnthropicTool)
   const maxSteps = config.maxSteps ?? 10
+  const rateLimiter = config.rateLimit ? new RateLimiter(config.rateLimit) : null
 
   return async (req: AnyReq, res: AnyRes) => {
     const body = req.body as { messages?: unknown; context?: Record<string, unknown> }
+
+    // ── 0. Rate limiting ───────────────────────────────────────────────────
+    if (rateLimiter) {
+      const ip = (req as Record<string, unknown>).ip as string ?? 'unknown'
+      const limited = rateLimiter.check(ip)
+      if (limited) {
+        res.status(429).json({
+          error: 'Too many requests',
+          retryAfter: limited.retryAfter,
+        })
+        return
+      }
+    }
 
     // ── 1. Validate input before any SSE headers ───────────────────────────
     const validation = validateMessages(body?.messages, {

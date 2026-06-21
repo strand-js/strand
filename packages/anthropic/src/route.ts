@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { generateId, validateMessages } from '@strand-js/core'
+import { generateId, validateMessages, RateLimiter } from '@strand-js/core'
 import type { StrandHandlerConfig } from './handler'
 import { toolToAnthropicTool } from './format'
 
@@ -19,8 +19,21 @@ export function createStrandRoute(
   const client = new Anthropic({ apiKey: config.apiKey })
   const anthropicTools = (config.tools ?? []).map(toolToAnthropicTool)
   const maxSteps = config.maxSteps ?? 10
+  const rateLimiter = config.rateLimit ? new RateLimiter(config.rateLimit) : null
 
   return async (req: Request): Promise<Response> => {
+    // ── 0. Rate limiting ─────────────────────────────────────────────────
+    if (rateLimiter) {
+      const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown'
+      const limited = rateLimiter.check(ip)
+      if (limited) {
+        return new Response(JSON.stringify({ error: 'Too many requests', retryAfter: limited.retryAfter }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json', 'Retry-After': String(limited.retryAfter) },
+        })
+      }
+    }
+
     const body = await req.json() as { messages?: unknown; context?: Record<string, unknown> }
 
     // ── 1. Validate input ────────────────────────────────────────────────

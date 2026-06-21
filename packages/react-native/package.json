@@ -1,6 +1,6 @@
 {
   "name": "@strand-js/react-native",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "description": "React Native transport adapter for Strand — patches streaming fetch support",
   "main": "./dist/index.js",

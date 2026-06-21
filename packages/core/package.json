@@ -1,6 +1,6 @@
 {
   "name": "@strand-js/core",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "description": "Provider-agnostic AI state management — core types and client",
   "main": "./dist/index.js",

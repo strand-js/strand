@@ -1,6 +1,7 @@
 import OpenAI from 'openai'
 import type { ToolDefinition, Session } from '@strand-js/core'
-import { generateId, validateMessages } from '@strand-js/core'
+import { generateId, validateMessages, RateLimiter } from '@strand-js/core'
+import type { RateLimitConfig } from '@strand-js/core'
 import { toolToOpenAITool } from './format'
 
 export interface StrandHandlerConfig {
@@ -15,6 +16,7 @@ export interface StrandHandlerConfig {
   ) => Promise<unknown>
   // Security
   authorize?: (request: Request) => Promise<unknown> | unknown
+  rateLimit?: RateLimitConfig
   maxMessages?: number        // default: 100
   maxMessageLength?: number   // default: 50_000
   // Lifecycle
@@ -42,9 +44,20 @@ export function createStrandHandler(
   const client = new OpenAI({ apiKey: config.apiKey })
   const openAITools = (config.tools ?? []).map(toolToOpenAITool)
   const maxSteps = config.maxSteps ?? 10
+  const rateLimiter = config.rateLimit ? new RateLimiter(config.rateLimit) : null
 
   return async (req: AnyReq, res: AnyRes) => {
     const body = req.body as { messages?: unknown }
+
+    // ── 0. Rate limiting ─────────────────────────────────────────────────
+    if (rateLimiter) {
+      const ip = (req as Record<string, unknown>).ip as string ?? 'unknown'
+      const limited = rateLimiter.check(ip)
+      if (limited) {
+        res.status(429).json({ error: 'Too many requests', retryAfter: limited.retryAfter })
+        return
+      }
+    }
 
     // ── 1. Validate input ────────────────────────────────────────────────
     const validation = validateMessages(body?.messages, {
