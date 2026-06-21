@@ -4,6 +4,8 @@
 
 TypeScript-first. Provider-agnostic. Works with React 18+ and Node 18+.
 
+![Strand demo](./strand-demo.gif)
+
 ---
 
 ## The problem
