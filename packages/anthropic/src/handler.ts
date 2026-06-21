@@ -44,6 +44,21 @@ function emit(res: AnyRes, eventType: string, data: object): void {
   res.write(`event: ${eventType}\ndata: ${JSON.stringify(data)}\n\n`)
 }
 
+// Wraps an Express req so request.headers.get() works like the Web API Request
+function normalizeRequest(req: AnyReq): Request {
+  const rawHeaders = (req.headers ?? {}) as Record<string, string | string[] | undefined>
+  const normalized = {
+    ...req,
+    headers: {
+      get: (name: string): string | null => {
+        const val = rawHeaders[name.toLowerCase()]
+        return Array.isArray(val) ? (val[0] ?? null) : (val ?? null)
+      },
+    },
+  }
+  return normalized as unknown as Request
+}
+
 export function createStrandHandler(
   config: StrandHandlerConfig,
 ): (req: AnyReq, res: AnyRes) => Promise<void> {
@@ -53,6 +68,7 @@ export function createStrandHandler(
   const rateLimiter = config.rateLimit ? new RateLimiter(config.rateLimit) : null
 
   return async (req: AnyReq, res: AnyRes) => {
+    const normalizedReq = normalizeRequest(req)
     const body = req.body as { messages?: unknown; context?: Record<string, unknown> }
 
     // ── 0. Rate limiting ───────────────────────────────────────────────────
@@ -81,7 +97,7 @@ export function createStrandHandler(
     // ── 2. Authorize ───────────────────────────────────────────────────────
     if (config.authorize) {
       try {
-        await config.authorize(req as unknown as Request)
+        await config.authorize(normalizedReq)
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Unauthorized'
         res.status(401).json({ error: message })
@@ -101,7 +117,7 @@ export function createStrandHandler(
 
       const system =
         typeof config.system === 'function'
-          ? await config.system(req as unknown as Request)
+          ? await config.system(normalizedReq)
           : (config.system ?? '')
 
       const conversation: Anthropic.MessageParam[] = messages.map(m => ({
@@ -175,7 +191,7 @@ export function createStrandHandler(
             completedTools.map(async block => {
               emit(res, 'strand:tool-input-done', { toolCallId: block.id, input: block.input })
               try {
-                const result = await config.onToolCall?.(block.name, block.input, { request: req as unknown as Request })
+                const result = await config.onToolCall?.(block.name, block.input, { request: normalizedReq })
                 emit(res, 'strand:tool-result', { toolCallId: block.id, result })
                 return { type: 'tool_result' as const, tool_use_id: block.id, content: JSON.stringify(result ?? null) }
               } catch (err) {
