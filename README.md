@@ -282,7 +282,7 @@ const {
 } = useConversation({
   system,         // string — system prompt
   tools,          // ToolDefinition[] — Zod-typed tool schemas
-  onToolCall,     // async (name, args) => result — client-side tool execution
+  onToolResult,   // (name, args, output) => void — observer fired after tool completes
   context,        // Record<string, unknown> — stable per-request context
   sessionId,      // string — share or persist state by ID
   onFinish,       // (message: Message) => void

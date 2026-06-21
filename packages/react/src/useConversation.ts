@@ -6,7 +6,7 @@ import { useStrandContext } from './StrandProvider'
 export interface ConversationOptions {
   system?: string
   tools?: ToolDefinition[]
-  onToolCall?: (name: string, args: Record<string, unknown>, output: unknown) => void
+  onToolResult?: (name: string, args: Record<string, unknown>, output: unknown) => void
   context?: Record<string, unknown>
   sessionId?: string
   onFinish?: (message: Message) => void
@@ -55,7 +55,7 @@ export function useConversation(options: ConversationOptions = {}): Conversation
   const abortRef = useRef<AbortController | null>(null)
 
   const send = useCallback((content: string) => {
-    const { context, onFinish, onError, onToolCall } = optionsRef.current
+    const { context, onFinish, onError, onToolResult } = optionsRef.current
 
     machine.addUserMessage(content)
     machine.transition('submitting')
@@ -75,12 +75,12 @@ export function useConversation(options: ConversationOptions = {}): Conversation
           if (abort.signal.aborted) break
           processWireEvent(event, machine, toolStore)
 
-          // Observer callback for tool results
-          if (event.type === 'strand:tool-result' && onToolCall) {
+          // Observer callback — fires client-side when a tool result arrives
+          if (event.type === 'strand:tool-result' && onToolResult) {
             const tc = machine.session.messages
               .flatMap(m => m.toolCalls ?? [])
               .find(t => t.id === event.toolCallId)
-            if (tc) onToolCall(tc.name, tc.input, event.result)
+            if (tc) onToolResult(tc.name, tc.input, event.result)
           }
         }
 
