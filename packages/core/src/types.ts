@@ -60,6 +60,7 @@ export interface ContextWindowConfig {
 
 export interface StrandClientConfig {
   baseUrl: string
+  headers?: Record<string, string>  // static headers sent with every request (e.g. auth tokens)
   retry?: RetryConfig
   contextWindow?: ContextWindowConfig
 }

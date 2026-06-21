@@ -25,6 +25,7 @@ import { createStrandClient } from '@strand-js/core'
 
 const client = createStrandClient({
   baseUrl: '/api/strand',
+  headers: { 'x-api-key': 'your-token' },  // sent with every request
   retry: { maxAttempts: 3, backoff: 'exponential' },
   contextWindow: { strategy: 'truncate-oldest', maxTokens: 100_000 },
 })

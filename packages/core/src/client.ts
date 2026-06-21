@@ -9,6 +9,7 @@ class StrandClientImpl implements StrandClient {
   constructor(config: StrandClientConfig) {
     this.config = {
       baseUrl: config.baseUrl.replace(/\/$/, ''),
+      headers: config.headers ?? {},
       retry: {
         maxAttempts: config.retry?.maxAttempts ?? 3,
         backoff: config.retry?.backoff ?? 'exponential',
@@ -38,6 +39,7 @@ class StrandClientImpl implements StrandClient {
           headers: {
             'Content-Type': 'application/json',
             Accept: 'text/event-stream',
+            ...this.config.headers,
           },
           body,
           signal,
