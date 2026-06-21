@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react'
-import type { StrandClient } from '@strandjs/core'
-import { ToolCallStore } from '@strandjs/core'
+import type { StrandClient } from '@strand-js/core'
+import { ToolCallStore } from '@strand-js/core'
 
 interface StrandContextValue {
   client: StrandClient

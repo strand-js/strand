@@ -1,5 +1,5 @@
-import type { Message, ToolDefinition } from '@strandjs/core'
-import { toolToJsonSchema } from '@strandjs/core'
+import type { Message, ToolDefinition } from '@strand-js/core'
+import { toolToJsonSchema } from '@strand-js/core'
 import type OpenAI from 'openai'
 
 export function toolToOpenAITool(tool: ToolDefinition): OpenAI.ChatCompletionTool {

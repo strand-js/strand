@@ -10,8 +10,8 @@ React context provider that makes the `StrandClient` (and the shared `ToolCallSt
 ## Usage
 
 ```tsx
-import { createStrandClient } from '@strandjs/core'
-import { StrandProvider } from '@strandjs/react'
+import { createStrandClient } from '@strand-js/core'
+import { StrandProvider } from '@strand-js/react'
 
 const client = createStrandClient({ baseUrl: '/api/strand' })
 

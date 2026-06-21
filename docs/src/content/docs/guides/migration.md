@@ -1,11 +1,11 @@
 ---
 title: Migration from Vercel AI SDK
-description: How to move from @ai-sdk/react to @strandjs/react.
+description: How to move from @ai-sdk/react to @strand-js/react.
 ---
 
 # Migration from Vercel AI SDK
 
-This guide covers moving from `@ai-sdk/react` to `@strandjs/react`.
+This guide covers moving from `@ai-sdk/react` to `@strand-js/react`.
 
 ## Why migrate?
 
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 ### After (Strand)
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strandjs/anthropic'
+import { createStrandRoute } from '@strand-js/anthropic'
 
 export const POST = createStrandRoute({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -71,7 +71,7 @@ function Chat() {
 
 ### After
 ```tsx
-import { useConversation } from '@strandjs/react'
+import { useConversation } from '@strand-js/react'
 
 function Chat() {
   const { messages, send, isPending, isStreaming, cancel } = useConversation()

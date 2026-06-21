@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
-import type { StrandClient, StrandClientConfig, WireEvent } from '@strandjs/core'
+import type { StrandClient, StrandClientConfig, WireEvent } from '@strand-js/core'
 import { useAgentSession } from '../useAgentSession'
 import { StrandProvider } from '../StrandProvider'
 import type { ReactNode } from 'react'

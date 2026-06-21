@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { z } from 'zod'
-import { tool } from '@strandjs/core'
+import { tool } from '@strand-js/core'
 
 // ── Mock Anthropic SDK ─────────────────────────────────────────────────────
 

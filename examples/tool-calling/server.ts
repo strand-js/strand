@@ -1,8 +1,8 @@
 import 'dotenv/config'
 import express from 'express'
 import { z } from 'zod'
-import { createStrandHandler } from '@strandjs/anthropic'
-import { tool } from '@strandjs/core'
+import { createStrandHandler } from '@strand-js/anthropic'
+import { tool } from '@strand-js/core'
 
 const app = express()
 app.use(express.json())

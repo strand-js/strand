@@ -5,6 +5,6 @@
 ### Patch Changes
 
 - Updated dependencies [f4c92e5]
-  - @strandjs/anthropic@0.1.0
-  - @strandjs/core@0.1.0
-  - @strandjs/react@0.1.0
+  - @strand-js/anthropic@0.1.0
+  - @strand-js/core@0.1.0
+  - @strand-js/react@0.1.0

@@ -39,21 +39,21 @@ Strand eliminates this. It is to LLM interactions what RTK Query is to REST APIs
 
 **Client (browser):**
 ```bash
-npm install @strandjs/core @strandjs/react zod
+npm install @strand-js/core @strand-js/react zod
 ```
 
 **Server:**
 ```bash
 # Anthropic
-npm install @strandjs/anthropic
+npm install @strand-js/anthropic
 
 # OpenAI
-npm install @strandjs/openai
+npm install @strand-js/openai
 ```
 
 **React Native:**
 ```bash
-npm install @strandjs/react-native
+npm install @strand-js/react-native
 ```
 
 ---
@@ -65,7 +65,7 @@ Strand splits cleanly across your stack:
 ```
 Browser                    Your Server               LLM Provider
 ─────────────────────      ──────────────────────    ─────────────
-@strandjs/react              @strandjs/anthropic         Anthropic API
+@strand-js/react              @strand-js/anthropic         Anthropic API
 useConversation()    ───►  createStrandHandler() ───► claude-*
 useToolCall()              (tool execution here)
 useAgentSession()    ◄───  SSE stream ◄───────────── streaming tokens
@@ -81,7 +81,7 @@ Your API key never leaves your server. Your React hooks never touch raw HTTP.
 
 ```ts
 // server.ts — Express / Fastify / Hono / any Node.js framework
-import { createStrandHandler } from '@strandjs/anthropic'
+import { createStrandHandler } from '@strand-js/anthropic'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -92,7 +92,7 @@ app.post('/api/strand', createStrandHandler({
 Next.js App Router:
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strandjs/anthropic'
+import { createStrandRoute } from '@strand-js/anthropic'
 
 export const POST = createStrandRoute({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -104,8 +104,8 @@ export const POST = createStrandRoute({
 
 ```tsx
 // main.tsx
-import { createStrandClient } from '@strandjs/core'
-import { StrandProvider } from '@strandjs/react'
+import { createStrandClient } from '@strand-js/core'
+import { StrandProvider } from '@strand-js/react'
 
 const client = createStrandClient({ baseUrl: '/api/strand' })
 
@@ -121,7 +121,7 @@ function App() {
 ### 3. Use the hooks
 
 ```tsx
-import { useConversation } from '@strandjs/react'
+import { useConversation } from '@strand-js/react'
 
 function Chat() {
   const { messages, send, isPending, isStreaming, isDone, cancel } = useConversation({
@@ -295,7 +295,7 @@ const {
 
 ```ts
 import { z } from 'zod'
-import { tool } from '@strandjs/core'
+import { tool } from '@strand-js/core'
 
 const weatherTool = tool({
   name: 'get_weather',
@@ -468,15 +468,15 @@ createStrandHandler({
 
 ## React Native
 
-React Native's `fetch` doesn't support streaming. `@strandjs/react-native` patches the transport layer transparently — no API changes, no config required.
+React Native's `fetch` doesn't support streaming. `@strand-js/react-native` patches the transport layer transparently — no API changes, no config required.
 
 ```bash
-npm install @strandjs/react-native
+npm install @strand-js/react-native
 ```
 
 ```ts
 // App.tsx — must be the first import
-import '@strandjs/react-native'
+import '@strand-js/react-native'
 ```
 
 All hooks work identically after this. Works with Expo SDK 50+ and bare React Native 0.73+.
@@ -486,11 +486,11 @@ All hooks work identically after this. Works with Expo SDK 50+ and bare React Na
 ## OpenAI
 
 ```bash
-npm install @strandjs/openai
+npm install @strand-js/openai
 ```
 
 ```ts
-import { createStrandHandler } from '@strandjs/openai'
+import { createStrandHandler } from '@strand-js/openai'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.OPENAI_API_KEY,
@@ -531,7 +531,7 @@ Strand is not a Vercel AI SDK replacement for every use case. If you're deep in 
 ## Roadmap
 
 ### v1 (current)
-- `@strandjs/core`, `@strandjs/react`, `@strandjs/anthropic`, `@strandjs/openai`, `@strandjs/react-native`
+- `@strand-js/core`, `@strand-js/react`, `@strand-js/anthropic`, `@strand-js/openai`, `@strand-js/react-native`
 - `useConversation`, `useToolCall`, `useAgentSession`, `useStreamingText`
 - Retry/backoff, context window management, parallel tool call state
 

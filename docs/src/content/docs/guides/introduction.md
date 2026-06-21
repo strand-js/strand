@@ -41,9 +41,9 @@ Strand eliminates this entirely.
 - **`useToolCall`** — real-time per-tool state observable anywhere in your tree
 - **`useAgentSession`** — multi-step autonomous agent flows with step tracking
 - **`useStreamingText`** — low-level streaming primitive for custom UIs
-- **`@strandjs/anthropic`** — server-side Anthropic handler with agentic loop
-- **`@strandjs/openai`** — same for OpenAI
-- **`@strandjs/react-native`** — streaming fetch patch for React Native
+- **`@strand-js/anthropic`** — server-side Anthropic handler with agentic loop
+- **`@strand-js/openai`** — same for OpenAI
+- **`@strand-js/react-native`** — streaming fetch patch for React Native
 
 ## How it compares
 

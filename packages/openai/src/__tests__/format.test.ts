@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
-import { tool } from '@strandjs/core'
+import { tool } from '@strand-js/core'
 import { toolToOpenAITool, messagesToOpenAIMessages } from '../format'
-import type { Message } from '@strandjs/core'
+import type { Message } from '@strand-js/core'
 
 describe('toolToOpenAITool()', () => {
   it('wraps in function type', () => {

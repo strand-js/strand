@@ -1,4 +1,4 @@
-# @strandjs/openai
+# @strand-js/openai
 
 ## 0.1.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [f4c92e5]
-  - @strandjs/core@0.1.0
+  - @strand-js/core@0.1.0

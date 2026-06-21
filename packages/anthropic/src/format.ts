@@ -1,5 +1,5 @@
-import type { Message, ToolDefinition } from '@strandjs/core'
-import { toolToJsonSchema } from '@strandjs/core'
+import type { Message, ToolDefinition } from '@strand-js/core'
+import { toolToJsonSchema } from '@strand-js/core'
 import type Anthropic from '@anthropic-ai/sdk'
 
 export function toolToAnthropicTool(tool: ToolDefinition): Anthropic.Tool {

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import type { Message, ToolDefinition, TokenUsage, StrandClient, StreamingStatus, Session } from '@strandjs/core'
-import { SessionStateMachine, processWireEvent } from '@strandjs/core'
+import type { Message, ToolDefinition, TokenUsage, StrandClient, StreamingStatus, Session } from '@strand-js/core'
+import { SessionStateMachine, processWireEvent } from '@strand-js/core'
 import { useStrandContext } from './StrandProvider'
 
 export interface ConversationOptions {

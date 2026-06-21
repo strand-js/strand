@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { createStrandClient } from '@strandjs/core'
-import { StrandProvider } from '@strandjs/react'
+import { createStrandClient } from '@strand-js/core'
+import { StrandProvider } from '@strand-js/react'
 import { App } from './App'
 
 const client = createStrandClient({ baseUrl: '/api/strand' })

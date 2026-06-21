@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent } from 'react'
-import { useConversation } from '@strandjs/react'
+import { useConversation } from '@strand-js/react'
 
 export function App() {
   const { messages, send, isPending, isStreaming, isDone, cancel, clear, tokenUsage } =

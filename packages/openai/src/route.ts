@@ -1,5 +1,5 @@
 import OpenAI from 'openai'
-import { generateId, validateMessages } from '@strandjs/core'
+import { generateId, validateMessages } from '@strand-js/core'
 import type { StrandHandlerConfig } from './handler'
 import { toolToOpenAITool } from './format'
 

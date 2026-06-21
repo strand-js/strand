@@ -5,12 +5,12 @@ description: Using Strand in React Native and Expo with streaming fetch support.
 
 # React Native
 
-React Native's built-in `fetch` does not support streaming response bodies. `@strandjs/react-native` patches this transparently so all Strand hooks work identically.
+React Native's built-in `fetch` does not support streaming response bodies. `@strand-js/react-native` patches this transparently so all Strand hooks work identically.
 
 ## Install
 
 ```bash
-npm install @strandjs/react-native
+npm install @strand-js/react-native
 ```
 
 ## Setup
@@ -19,10 +19,10 @@ Import as the first line of `App.tsx`:
 
 ```ts
 // App.tsx — must be first
-import '@strandjs/react-native'
+import '@strand-js/react-native'
 
 // Everything else...
-import { StrandProvider } from '@strandjs/react'
+import { StrandProvider } from '@strand-js/react'
 ```
 
 That's it. All hooks work as normal.
