@@ -1,4 +1,4 @@
-# @strand/anthropic
+# @strandjs/anthropic
 
 ## 0.1.0
 
@@ -9,4 +9,4 @@
 ### Patch Changes
 
 - Updated dependencies [f4c92e5]
-  - @strand/core@0.1.0
+  - @strandjs/core@0.1.0

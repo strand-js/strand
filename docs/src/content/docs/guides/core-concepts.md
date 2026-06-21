@@ -12,7 +12,7 @@ Strand splits cleanly across your stack:
 ```
 Browser                    Your Server               LLM Provider
 ─────────────────────      ──────────────────────    ─────────────
-@strand/react              @strand/anthropic         Anthropic API
+@strandjs/react              @strandjs/anthropic         Anthropic API
 useConversation()    ───►  createStrandHandler() ───► claude-*
 useToolCall()              (tool execution here)
 useAgentSession()    ◄───  SSE stream ◄───────────── streaming tokens

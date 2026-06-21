@@ -1,5 +1,5 @@
 {
-  "name": "@strand/anthropic",
+  "name": "@strandjs/anthropic",
   "version": "0.1.0",
   "description": "Anthropic provider adapter for Strand",
   "main": "./dist/index.js",
@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.40.0",
-    "@strand/core": "workspace:*"
+    "@strandjs/core": "workspace:*"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

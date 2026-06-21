@@ -39,21 +39,21 @@ Strand eliminates this. It is to LLM interactions what RTK Query is to REST APIs
 
 **Client (browser):**
 ```bash
-npm install @strand/core @strand/react zod
+npm install @strandjs/core @strandjs/react zod
 ```
 
 **Server:**
 ```bash
 # Anthropic
-npm install @strand/anthropic
+npm install @strandjs/anthropic
 
 # OpenAI
-npm install @strand/openai
+npm install @strandjs/openai
 ```
 
 **React Native:**
 ```bash
-npm install @strand/react-native
+npm install @strandjs/react-native
 ```
 
 ---
@@ -65,7 +65,7 @@ Strand splits cleanly across your stack:
 ```
 Browser                    Your Server               LLM Provider
 ─────────────────────      ──────────────────────    ─────────────
-@strand/react              @strand/anthropic         Anthropic API
+@strandjs/react              @strandjs/anthropic         Anthropic API
 useConversation()    ───►  createStrandHandler() ───► claude-*
 useToolCall()              (tool execution here)
 useAgentSession()    ◄───  SSE stream ◄───────────── streaming tokens
@@ -81,7 +81,7 @@ Your API key never leaves your server. Your React hooks never touch raw HTTP.
 
 ```ts
 // server.ts — Express / Fastify / Hono / any Node.js framework
-import { createStrandHandler } from '@strand/anthropic'
+import { createStrandHandler } from '@strandjs/anthropic'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -92,7 +92,7 @@ app.post('/api/strand', createStrandHandler({
 Next.js App Router:
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strand/anthropic'
+import { createStrandRoute } from '@strandjs/anthropic'
 
 export const POST = createStrandRoute({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -104,8 +104,8 @@ export const POST = createStrandRoute({
 
 ```tsx
 // main.tsx
-import { createStrandClient } from '@strand/core'
-import { StrandProvider } from '@strand/react'
+import { createStrandClient } from '@strandjs/core'
+import { StrandProvider } from '@strandjs/react'
 
 const client = createStrandClient({ baseUrl: '/api/strand' })
 
@@ -121,7 +121,7 @@ function App() {
 ### 3. Use the hooks
 
 ```tsx
-import { useConversation } from '@strand/react'
+import { useConversation } from '@strandjs/react'
 
 function Chat() {
   const { messages, send, isPending, isStreaming, isDone, cancel } = useConversation({
@@ -295,7 +295,7 @@ const {
 
 ```ts
 import { z } from 'zod'
-import { tool } from '@strand/core'
+import { tool } from '@strandjs/core'
 
 const weatherTool = tool({
   name: 'get_weather',
@@ -468,15 +468,15 @@ createStrandHandler({
 
 ## React Native
 
-React Native's `fetch` doesn't support streaming. `@strand/react-native` patches the transport layer transparently — no API changes, no config required.
+React Native's `fetch` doesn't support streaming. `@strandjs/react-native` patches the transport layer transparently — no API changes, no config required.
 
 ```bash
-npm install @strand/react-native
+npm install @strandjs/react-native
 ```
 
 ```ts
 // App.tsx — must be the first import
-import '@strand/react-native'
+import '@strandjs/react-native'
 ```
 
 All hooks work identically after this. Works with Expo SDK 50+ and bare React Native 0.73+.
@@ -486,11 +486,11 @@ All hooks work identically after this. Works with Expo SDK 50+ and bare React Na
 ## OpenAI
 
 ```bash
-npm install @strand/openai
+npm install @strandjs/openai
 ```
 
 ```ts
-import { createStrandHandler } from '@strand/openai'
+import { createStrandHandler } from '@strandjs/openai'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.OPENAI_API_KEY,
@@ -531,7 +531,7 @@ Strand is not a Vercel AI SDK replacement for every use case. If you're deep in 
 ## Roadmap
 
 ### v1 (current)
-- `@strand/core`, `@strand/react`, `@strand/anthropic`, `@strand/openai`, `@strand/react-native`
+- `@strandjs/core`, `@strandjs/react`, `@strandjs/anthropic`, `@strandjs/openai`, `@strandjs/react-native`
 - `useConversation`, `useToolCall`, `useAgentSession`, `useStreamingText`
 - Retry/backoff, context window management, parallel tool call state
 

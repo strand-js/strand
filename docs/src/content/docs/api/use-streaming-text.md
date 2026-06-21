@@ -9,7 +9,7 @@ Low-level primitive for building custom streaming UIs. If you're using `useConve
 
 ## When to use it
 
-Use `useStreamingText` when you're building a custom hook on top of `@strand/core` and you have access to a raw `ReadableStream<string>`.
+Use `useStreamingText` when you're building a custom hook on top of `@strandjs/core` and you have access to a raw `ReadableStream<string>`.
 
 ## Signature
 

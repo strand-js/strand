@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import type { ToolDefinition, StrandClient } from '@strand/core'
-import { SessionStateMachine, processWireEvent } from '@strand/core'
+import type { ToolDefinition, StrandClient } from '@strandjs/core'
+import { SessionStateMachine, processWireEvent } from '@strandjs/core'
 import { useStrandContext } from './StrandProvider'
 
 export interface AgentStep {

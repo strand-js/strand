@@ -10,9 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@strand/anthropic": "workspace:*",
-    "@strand/core": "workspace:*",
-    "@strand/react": "workspace:*",
+    "@strandjs/anthropic": "workspace:*",
+    "@strandjs/core": "workspace:*",
+    "@strandjs/react": "workspace:*",
     "express": "^4.21.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

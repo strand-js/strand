@@ -50,7 +50,7 @@ Automatically trim conversation history before sending to stay within token limi
 ## Example
 
 ```ts
-import { createStrandClient } from '@strand/core'
+import { createStrandClient } from '@strandjs/core'
 
 const client = createStrandClient({
   baseUrl: '/api/strand',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { ToolCallState, StrandClient } from '@strand/core'
+import type { ToolCallState, StrandClient } from '@strandjs/core'
 import { useStrandContext } from './StrandProvider'
 
 export interface ToolCallResult<TInput = unknown, TOutput = unknown> {

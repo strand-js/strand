@@ -13,16 +13,16 @@ Get a streaming chat app running in 5 minutes.
 
 **Client:**
 ```bash
-npm install @strand/core @strand/react zod
+npm install @strandjs/core @strandjs/react zod
 ```
 
 **Server:**
 ```bash
 # Anthropic
-npm install @strand/anthropic
+npm install @strandjs/anthropic
 
 # OpenAI
-npm install @strand/openai
+npm install @strandjs/openai
 ```
 
 ## 1. Set up the server endpoint
@@ -30,7 +30,7 @@ npm install @strand/openai
 <Tabs>
 <TabItem label="Express / Fastify / Hono">
 ```ts
-import { createStrandHandler } from '@strand/anthropic'
+import { createStrandHandler } from '@strandjs/anthropic'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -41,7 +41,7 @@ app.post('/api/strand', createStrandHandler({
 <TabItem label="Next.js App Router">
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strand/anthropic'
+import { createStrandRoute } from '@strandjs/anthropic'
 
 export const POST = createStrandRoute({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -55,8 +55,8 @@ export const POST = createStrandRoute({
 
 ```tsx
 // main.tsx
-import { createStrandClient } from '@strand/core'
-import { StrandProvider } from '@strand/react'
+import { createStrandClient } from '@strandjs/core'
+import { StrandProvider } from '@strandjs/react'
 
 const client = createStrandClient({ baseUrl: '/api/strand' })
 
@@ -72,7 +72,7 @@ function App() {
 ## 3. Use the hook
 
 ```tsx
-import { useConversation } from '@strand/react'
+import { useConversation } from '@strandjs/react'
 
 function Chat() {
   const { messages, send, isPending, isStreaming, cancel } = useConversation({

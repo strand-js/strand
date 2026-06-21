@@ -1,5 +1,5 @@
 {
-  "name": "@strand/core",
+  "name": "@strandjs/core",
   "version": "0.1.0",
   "description": "Provider-agnostic AI state management — core types and client",
   "main": "./dist/index.js",

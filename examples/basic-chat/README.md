@@ -1,6 +1,6 @@
 # basic-chat
 
-A minimal Vite + React chat app using `@strand/react` and `@strand/anthropic`.
+A minimal Vite + React chat app using `@strandjs/react` and `@strandjs/anthropic`.
 
 ## Setup
 

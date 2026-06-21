@@ -1,16 +1,16 @@
 ---
 title: Anthropic
-description: Using @strand/anthropic to connect Claude to your Strand app.
+description: Using @strandjs/anthropic to connect Claude to your Strand app.
 ---
 
 # Anthropic
 
-`@strand/anthropic` provides server-side handlers that call the Anthropic API and stream wire events back to your client hooks.
+`@strandjs/anthropic` provides server-side handlers that call the Anthropic API and stream wire events back to your client hooks.
 
 ## Install
 
 ```bash
-npm install @strand/anthropic
+npm install @strandjs/anthropic
 ```
 
 ## createStrandHandler
@@ -18,7 +18,7 @@ npm install @strand/anthropic
 For Express, Fastify, Hono, or any Node.js HTTP framework:
 
 ```ts
-import { createStrandHandler } from '@strand/anthropic'
+import { createStrandHandler } from '@strandjs/anthropic'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -31,7 +31,7 @@ app.post('/api/strand', createStrandHandler({
 
 ```ts
 import { z } from 'zod'
-import { tool } from '@strand/core'
+import { tool } from '@strandjs/core'
 
 const weatherTool = tool({
   name: 'get_weather',
@@ -68,7 +68,7 @@ For Next.js App Router:
 
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strand/anthropic'
+import { createStrandRoute } from '@strandjs/anthropic'
 
 export const POST = createStrandRoute({
   apiKey: process.env.ANTHROPIC_API_KEY,

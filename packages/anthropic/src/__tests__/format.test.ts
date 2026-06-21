@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { z } from 'zod'
-import { tool } from '@strand/core'
+import { tool } from '@strandjs/core'
 import { toolToAnthropicTool, messagesToAnthropicMessages } from '../format'
-import type { Message } from '@strand/core'
+import type { Message } from '@strandjs/core'
 
 describe('toolToAnthropicTool()', () => {
   it('maps name and description', () => {

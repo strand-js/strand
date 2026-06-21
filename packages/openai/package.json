@@ -1,5 +1,5 @@
 {
-  "name": "@strand/openai",
+  "name": "@strandjs/openai",
   "version": "0.1.0",
   "description": "OpenAI provider adapter for Strand",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@strand/core": "workspace:*",
+    "@strandjs/core": "workspace:*",
     "openai": "^4.77.0"
   },
   "devDependencies": {

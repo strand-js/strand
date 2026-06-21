@@ -1,4 +1,4 @@
-# @strand/core
+# @strandjs/core
 
 ## 0.1.0
 

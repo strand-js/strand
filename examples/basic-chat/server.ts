@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
-import { createStrandHandler } from '@strand/anthropic'
+import { createStrandHandler } from '@strandjs/anthropic'
 
 const app = express()
 app.use(express.json())

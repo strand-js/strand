@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
-import { useAgentSession } from '@strand/react'
-import type { AgentStep } from '@strand/react'
+import { useAgentSession } from '@strandjs/react'
+import type { AgentStep } from '@strandjs/react'
 
 const EXAMPLE_GOALS = [
   'What is the world population and what percentage lives in Asia?',

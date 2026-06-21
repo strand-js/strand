@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
-import type { ToolDefinition, Session } from '@strand/core'
-import { generateId, validateMessages } from '@strand/core'
+import type { ToolDefinition, Session } from '@strandjs/core'
+import { generateId, validateMessages } from '@strandjs/core'
 import { toolToOpenAITool } from './format'
 
 export interface StrandHandlerConfig {

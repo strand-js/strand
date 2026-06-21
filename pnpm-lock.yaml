@@ -50,13 +50,13 @@ importers:
 
   examples/agent-session:
     dependencies:
-      '@strand/anthropic':
+      '@strandjs/anthropic':
         specifier: workspace:*
         version: link:../../packages/anthropic
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@strand/react':
+      '@strandjs/react':
         specifier: workspace:*
         version: link:../../packages/react
       express:
@@ -99,13 +99,13 @@ importers:
 
   examples/basic-chat:
     dependencies:
-      '@strand/anthropic':
+      '@strandjs/anthropic':
         specifier: workspace:*
         version: link:../../packages/anthropic
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@strand/react':
+      '@strandjs/react':
         specifier: workspace:*
         version: link:../../packages/react
       express:
@@ -145,13 +145,13 @@ importers:
 
   examples/tool-calling:
     dependencies:
-      '@strand/anthropic':
+      '@strandjs/anthropic':
         specifier: workspace:*
         version: link:../../packages/anthropic
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../../packages/core
-      '@strand/react':
+      '@strandjs/react':
         specifier: workspace:*
         version: link:../../packages/react
       express:
@@ -197,7 +197,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.40.0
         version: 0.40.1
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -238,7 +238,7 @@ importers:
 
   packages/openai:
     dependencies:
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../core
       openai:
@@ -263,7 +263,7 @@ importers:
 
   packages/react:
     dependencies:
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -297,7 +297,7 @@ importers:
 
   packages/react-native:
     dependencies:
-      '@strand/core':
+      '@strandjs/core':
         specifier: workspace:*
         version: link:../core
       react:

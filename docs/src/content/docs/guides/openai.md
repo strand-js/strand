@@ -1,22 +1,22 @@
 ---
 title: OpenAI
-description: Using @strand/openai to connect GPT models to your Strand app.
+description: Using @strandjs/openai to connect GPT models to your Strand app.
 ---
 
 # OpenAI
 
-`@strand/openai` provides server-side handlers that call the OpenAI API and stream wire events back to your client hooks.
+`@strandjs/openai` provides server-side handlers that call the OpenAI API and stream wire events back to your client hooks.
 
 ## Install
 
 ```bash
-npm install @strand/openai
+npm install @strandjs/openai
 ```
 
 ## createStrandHandler
 
 ```ts
-import { createStrandHandler } from '@strand/openai'
+import { createStrandHandler } from '@strandjs/openai'
 
 app.post('/api/strand', createStrandHandler({
   apiKey: process.env.OPENAI_API_KEY,
@@ -29,7 +29,7 @@ app.post('/api/strand', createStrandHandler({
 
 ```ts
 // app/api/strand/route.ts
-import { createStrandRoute } from '@strand/openai'
+import { createStrandRoute } from '@strandjs/openai'
 
 export const POST = createStrandRoute({
   apiKey: process.env.OPENAI_API_KEY,
@@ -41,7 +41,7 @@ export const POST = createStrandRoute({
 
 ```ts
 import { z } from 'zod'
-import { tool } from '@strand/core'
+import { tool } from '@strandjs/core'
 
 const searchTool = tool({
   name: 'search',
@@ -64,8 +64,8 @@ app.post('/api/strand', createStrandHandler({
 The client and all React hooks are identical regardless of provider. To switch from Anthropic to OpenAI, only the server changes:
 
 ```diff
-- import { createStrandHandler } from '@strand/anthropic'
-+ import { createStrandHandler } from '@strand/openai'
+- import { createStrandHandler } from '@strandjs/anthropic'
++ import { createStrandHandler } from '@strandjs/openai'
 
   app.post('/api/strand', createStrandHandler({
 -   apiKey: process.env.ANTHROPIC_API_KEY,

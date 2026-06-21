@@ -1,5 +1,5 @@
 import { useRef, type KeyboardEvent } from 'react'
-import { useConversation, useToolCall } from '@strand/react'
+import { useConversation, useToolCall } from '@strandjs/react'
 
 // WeatherStatus lives separately from Chat — demonstrates that useToolCall
 // can subscribe to tool state anywhere in the component tree.

@@ -6,11 +6,6 @@ export default defineConfig({
     starlight({
       title: 'Strand',
       description: 'AI state management for React. The layer between your UI and your LLM.',
-      logo: {
-        light: './src/assets/logo-light.svg',
-        dark: './src/assets/logo-dark.svg',
-        replacesTitle: false,
-      },
       social: {
         github: 'https://github.com/strand-js/strand',
       },

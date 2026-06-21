@@ -1,5 +1,5 @@
 {
-  "name": "@strand/react-native",
+  "name": "@strandjs/react-native",
   "version": "0.1.0",
   "description": "React Native transport adapter for Strand — patches streaming fetch support",
   "main": "./dist/index.js",
@@ -23,7 +23,7 @@
     "lint": "eslint src"
   },
   "dependencies": {
-    "@strand/core": "workspace:*"
+    "@strandjs/core": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.0.0",

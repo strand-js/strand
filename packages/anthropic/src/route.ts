@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { generateId, validateMessages } from '@strand/core'
+import { generateId, validateMessages } from '@strandjs/core'
 import type { StrandHandlerConfig } from './handler'
 import { toolToAnthropicTool } from './format'
 

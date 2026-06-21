@@ -1,6 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { ToolDefinition, Session } from '@strand/core'
-import { generateId, validateMessages } from '@strand/core'
+import type { ToolDefinition, Session } from '@strandjs/core'
+import { generateId, validateMessages } from '@strandjs/core'
 import { toolToAnthropicTool } from './format'
 
 export interface StrandHandlerConfig {
