@@ -1,6 +1,6 @@
 {
   "name": "@strand/react-native",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "React Native transport adapter for Strand — patches streaming fetch support",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -12,7 +12,9 @@
       "require": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
