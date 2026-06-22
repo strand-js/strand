@@ -46,11 +46,14 @@ npm install @strand-js/core @strand-js/react zod
 
 **Server:**
 ```bash
-# Anthropic
+# Anthropic (Claude)
 npm install @strand-js/anthropic
 
-# OpenAI
+# OpenAI (GPT)
 npm install @strand-js/openai
+
+# Google (Gemini)
+npm install @strand-js/google
 ```
 
 **React Native:**
@@ -504,16 +507,37 @@ The client and all React hooks are provider-agnostic — zero changes on the fro
 
 ---
 
+## Google (Gemini)
+
+```bash
+npm install @strand-js/google
+```
+
+```ts
+import { createStrandHandler } from '@strand-js/google'
+
+app.post('/api/strand', createStrandHandler({
+  apiKey: process.env.GOOGLE_API_KEY,
+  model: 'gemini-2.0-flash',
+}))
+```
+
+Get a free API key at [aistudio.google.com](https://aistudio.google.com).
+
+---
+
 ## Why Strand?
 
 | | Strand | Vercel AI SDK | Raw SDK |
 |---|---|---|---|
+| Providers | Anthropic, OpenAI, Google | Anthropic, OpenAI, Google | One at a time |
 | React Native | ✅ Day one | ❌ Broken by default | ❌ DIY |
 | Per-tool state (`useToolCall`) | ✅ | ❌ | ❌ |
 | Streaming lifecycle (4 states) | ✅ | ⚠️ Known `isLoading` bugs | ❌ |
 | Context window management | ✅ Built in | ❌ Explicitly excluded | ❌ |
 | Stable context injection | ✅ | ❌ Stale closure footgun | ❌ |
 | Retry / backoff | ✅ Built in | ❌ Third party only | ❌ |
+| Built-in auth + rate limiting | ✅ | ❌ | ❌ |
 | Framework agnostic | ✅ | ⚠️ NextJS-centric | ✅ |
 | Parallel tool call state | ✅ | ⚠️ Open bug | ❌ |
 | Stable versioning contract | ✅ | ❌ 4 majors in 2 years | — |
@@ -533,8 +557,9 @@ Strand is not a Vercel AI SDK replacement for every use case. If you're deep in 
 ## Roadmap
 
 ### v1 (current)
-- `@strand-js/core`, `@strand-js/react`, `@strand-js/anthropic`, `@strand-js/openai`, `@strand-js/react-native`
+- `@strand-js/core`, `@strand-js/react`, `@strand-js/anthropic`, `@strand-js/openai`, `@strand-js/google`, `@strand-js/react-native`
 - `useConversation`, `useToolCall`, `useAgentSession`, `useStreamingText`
+- Built-in auth, rate limiting, input validation
 - Retry/backoff, context window management, parallel tool call state
 
 ### v2
